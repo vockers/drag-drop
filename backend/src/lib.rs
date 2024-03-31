@@ -1,3 +1,4 @@
+mod error;
 mod routes;
 
 use std::env;
@@ -11,18 +12,19 @@ pub async fn run() {
     let db = PgPoolOptions::new()
         .max_connections(10)
         .connect(&database_url)
-        .await.unwrap();
+        .await
+		.expect("Failed to connect to Database");
 
     sqlx::migrate!()
         .run(&db)
         .await
         .unwrap();
-    
+
     let port = env::var("PORT")
         .unwrap_or("3000".to_owned());
     let address = format!("0.0.0.0:{}", port);
 
     let listener = tokio::net::TcpListener::bind(address).await.unwrap();
     println!("Listening on port: {}", port);
-    axum::serve(listener, routes::routes()).await.unwrap();
+    axum::serve(listener, routes::routes(db)).await.unwrap();
 }

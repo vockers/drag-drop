@@ -1,6 +1,10 @@
-use axum::{routing::get, Router};
+mod categories;
 
-pub fn routes() -> Router {
+use axum::{Extension, Router};
+use sqlx::PgPool;
+
+pub fn routes(db: PgPool) -> Router {
     Router::new()
-        .route("/", get(|| async { "Hello, World!" }))
+        .nest("/api", categories::routes())
+		.layer(Extension(db))
 }

@@ -1,0 +1,76 @@
+use axum::{http::StatusCode, routing::post, Extension, Json, Router};
+use serde::{Deserialize, Serialize};
+use sqlx::{PgPool, Postgres, Transaction};
+
+use crate::error::{Error, Result};
+
+pub fn routes() -> Router {
+	Router::new()
+		.route("/categories", post(create_category))
+
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+struct Category {
+	name: String,
+	children: Option<Vec<Category>>,
+}
+
+struct SubCategory {
+	category: Category,
+	parent_id: Option<i32>,
+}
+
+async fn insert_category(
+	transaction: &mut Transaction<'_, Postgres>,
+	category: &Category,
+	parent_id: Option<i32>,
+) -> Result<i32> {
+	let cat = if let Some(parent_id) = parent_id {
+		sqlx::query_as("INSERT INTO categories (name, parent_id) VALUES ($1, $2) RETURNING id")
+		.bind(&category.name)
+		.bind(parent_id)
+	} else {
+		sqlx::query_as("INSERT INTO categories (name) VALUES ($1) RETURNING id")
+		.bind(&category.name)
+	};
+	let category_id: (i32,) = cat
+		.fetch_one(&mut **transaction)
+		.await
+		.map_err(|_| Error::status(StatusCode::INTERNAL_SERVER_ERROR))?;
+
+	Ok(category_id.0)
+}
+
+/// create category handler - POST /api/categories
+async fn create_category(
+	Extension(db): Extension<PgPool>,
+	Json(category): Json<Category>,
+) -> Result<Json<Category>> {
+	let mut transaction = db.begin()
+		.await
+		.map_err(|_| Error::status(StatusCode::INTERNAL_SERVER_ERROR))?;
+	
+	let mut stack: Vec<SubCategory> = vec![SubCategory {
+		category: category.clone(),
+		parent_id: None,
+	}];
+
+	while let Some(sub_category) = stack.pop() {
+		let id = insert_category(&mut transaction, &sub_category.category, sub_category.parent_id).await?;
+		if let Some(children) = sub_category.category.children {
+			for child in children {
+				stack.push(SubCategory {
+					category: child.clone(),
+					parent_id: Some(id),
+				});
+			}
+		}
+	}
+
+	transaction.commit()
+		.await
+		.map_err(|_| Error::status(StatusCode::INTERNAL_SERVER_ERROR))?;
+
+	Ok(Json(category))
+}
