@@ -2,7 +2,6 @@ mod error;
 mod routes;
 
 use std::env;
-
 use sqlx::postgres::PgPoolOptions;
 
 pub async fn run() {

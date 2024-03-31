@@ -7,7 +7,6 @@ use crate::error::{Error, Result};
 pub fn routes() -> Router {
 	Router::new()
 		.route("/categories", post(create_category))
-
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -21,12 +20,14 @@ struct SubCategory {
 	parent_id: Option<i32>,
 }
 
+/// Insert category into database.
+/// parent_id is Option<i32> because the root category has no parent.
 async fn insert_category(
 	transaction: &mut Transaction<'_, Postgres>,
 	category: &Category,
 	parent_id: Option<i32>,
 ) -> Result<i32> {
-	let cat = if let Some(parent_id) = parent_id {
+	let category_id = if let Some(parent_id) = parent_id {
 		sqlx::query_as("INSERT INTO categories (name, parent_id) VALUES ($1, $2) RETURNING id")
 		.bind(&category.name)
 		.bind(parent_id)
@@ -34,7 +35,7 @@ async fn insert_category(
 		sqlx::query_as("INSERT INTO categories (name) VALUES ($1) RETURNING id")
 		.bind(&category.name)
 	};
-	let category_id: (i32,) = cat
+	let category_id: (i32,) = category_id
 		.fetch_one(&mut **transaction)
 		.await
 		.map_err(|_| Error::status(StatusCode::INTERNAL_SERVER_ERROR))?;
