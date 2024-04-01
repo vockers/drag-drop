@@ -2,22 +2,8 @@ import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import Ajv from "ajv";
 import TreeNode from "./TreeNode";
-
-const categorySchema = {
-    "$id": "/Category",
-    "type": "object",
-    "maxProperties": 2,
-    "required": ["name"],
-    "additionalProperties": false,
-    "properties": {
-        "name": {"type": "string", "minLength": 3, "maxLength": 64},
-        "children": {
-            "type": "array",
-            "items": {"$ref": "/Category"},
-            "minItems": 1,
-        }
-    },
-};
+import axios from "axios";
+import { categorySchema } from "../config";
 
 export default function CategoryUploader() {
     const [category, setCategory] = useState({})
@@ -34,22 +20,44 @@ export default function CategoryUploader() {
     }, [])
     const { isDragAccept, getRootProps, getInputProps } = useDropzone({onDrop, multiple: false, accept: {"application/json": [".json"]}})
 
-        const isDragAcceptStyle = isDragAccept ? "bg-slate-200" : "";
+    const handleUpload = () => {
+        axios.post(`${import.meta.env.VITE_API_URL}/categories`, category).then((response) => {
+            console.log(response.data)
+        }).catch((error) => {
+            console.log(error)
+        })
+    }
 
-        return (
-            <>
-                {category.hasOwnProperty('name') ? (
+    const handleCancel = () => {
+        setCategory({});
+    }
+
+    return (
+        <>
+            {category.hasOwnProperty('name') ? (
+                <div>
                     <div className="h-full w-full bg-slate-300 p-3 rounded-md">
                         <TreeNode node={category} showChildrenNow={true} />
                     </div>
-                ) : (
-                    <div {...getRootProps({isDragAccept})} className={"flex flex-col items-center justify-center aspect-square rounded-sm border-4 border-dashed border-opacity-40 border-slate-600 text-slate-500 hover:cursor-pointer " + isDragAcceptStyle}>
-                        <div className={isDragAccept ? "test" : "hello"}></div>
-                        <input {...getInputProps()} />
-                        <i className="fa fa-file-code text-8xl mb-12"></i>
-                        <p className="text-xl font-medium">Drag 'n' drop a .json file, or click to select a file.</p>
+                    <div className="flex justify-center gap-3 mt-6">
+                        <button onClick={handleUpload} className="px-3 py-2 rounded-md bg-blue-500 text-slate-100 flex gap-2">
+                            <i className="fa fa-circle-arrow-up self-center"></i>
+                            <span className="font-medium">UPLOAD</span>
+                        </button>
+                        <button onClick={handleCancel} className="px-3 py-2 rounded-md bg-red-500 text-slate-100 flex gap-2">
+                            <i className="fa fa-circle-arrow-up self-center"></i>
+                            <span className="font-medium">CANCEL</span>
+                        </button>
                     </div>
-                )}
-            </>
-        );
-    }
+                </div>
+            ) : (
+                <div {...getRootProps({isDragAccept})} className={"flex flex-col items-center justify-center aspect-square rounded-sm border-4 border-dashed border-opacity-40 border-slate-600 text-slate-500 hover:cursor-pointer " + (isDragAccept && "bg-slate-200")}>
+                    <div className={isDragAccept ? "test" : "hello"}></div>
+                    <input {...getInputProps()} />
+                    <i className="fa fa-file-code text-8xl mb-12"></i>
+                    <p className="text-xl font-medium">Drag 'n' drop a .json file, or click to select a file.</p>
+                </div>
+            )}
+        </>
+    );
+}
