@@ -5,7 +5,7 @@ import Footer from "./Footer";
 export default function Layout() {
     return (
         <>
-        <div className="bg-blue-500 flex flex-col items-center">
+        <div className="h-full bg-blue-500 flex flex-col items-center">
             <NavBar />
             <Outlet />
         </div>
