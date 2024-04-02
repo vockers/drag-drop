@@ -9,8 +9,8 @@ export default function TreeNode({node, showChildrenNow}: {node: any, showChildr
     }
 
     return (
-        <div className="text-slate-700 w-full">
-            <button onClick={handleClick} className="w-full px-3 py-2 flex gap-2 rounded-md hover:bg-slate-400">
+        <div className="text-slate-600 w-full">
+            <button onClick={handleClick} className={"w-full px-3 py-2 flex gap-2 mb-1 rounded-md hover:bg-slate-300 " + (showChildren && "bg-slate-300")}>
                 {hasChildren ? (
                     showChildren ? (
                         <i className="w-4 fa fa-chevron-down self-center text-xs"></i>

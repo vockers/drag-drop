@@ -9,7 +9,7 @@ pub struct Error {
 }
 
 impl Error {
-	pub fn _new(code: StatusCode, message: Json<Value>) -> Self {
+	pub fn new(code: StatusCode, message: Json<Value>) -> Self {
 		Self { code, message }
 	}
 
