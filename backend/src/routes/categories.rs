@@ -1,4 +1,4 @@
-use axum::{http::StatusCode, routing::post, Extension, Json, Router};
+use axum::{routing::post, Extension, Json, Router};
 use serde::{Deserialize, Serialize};
 use sqlx::{PgPool, Postgres, Transaction};
 
@@ -38,7 +38,7 @@ async fn insert_category(
 	let category_id: (i32,) = category_id
 		.fetch_one(&mut **transaction)
 		.await
-		.map_err(|_| RequestError::status(StatusCode::INTERNAL_SERVER_ERROR))?;
+		.map_err(|_| RequestError::server())?;
 
 	Ok(category_id.0)
 }
@@ -50,7 +50,7 @@ async fn create_category(
 ) -> RequestResult<Json<Category>> {
 	let mut transaction = db.begin()
 		.await
-		.map_err(|_| RequestError::status(StatusCode::INTERNAL_SERVER_ERROR))?;
+		.map_err(|_| RequestError::server())?;
 	
 	let mut stack: Vec<SubCategory> = vec![SubCategory {
 		category: category.clone(),
@@ -71,7 +71,7 @@ async fn create_category(
 
 	transaction.commit()
 		.await
-		.map_err(|_| RequestError::status(StatusCode::INTERNAL_SERVER_ERROR))?;
+		.map_err(|_| RequestError::server())?;
 
 	Ok(Json(category))
 }

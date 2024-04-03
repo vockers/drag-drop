@@ -29,6 +29,7 @@ struct LoginRequest {
     password: String,
 }
 
+#[allow(unused)]
 #[derive(sqlx::FromRow)]
 struct DBUser {
     id: i32,
@@ -49,9 +50,7 @@ where
             .map_err(|_| RequestError::status(StatusCode::BAD_REQUEST))?;
 
         if let Err(errors) = user.validate() {
-            return Err(RequestError::new(StatusCode::BAD_REQUEST, Json(json!({
-                "error": errors.to_string()
-            }))))
+            return Err(RequestError::new(StatusCode::BAD_REQUEST, &errors.to_string()))
         }
 
         Ok(user)   
@@ -63,7 +62,7 @@ async fn signup(
     user: SignUpRequest
 ) -> RequestResult<Json<Value>> {
     let hashed_password = hash_password(user.password)
-        .map_err(|_| RequestError::status(StatusCode::INTERNAL_SERVER_ERROR))?;
+        .map_err(|_| RequestError::server())?;
 
     sqlx::query("INSERT INTO users (username, password) VALUES ($1, $2)")
         .bind(&user.username)
@@ -73,9 +72,9 @@ async fn signup(
         .map_err(|error| { 
             match error {
                 sqlx::Error::Database(db_error) if db_error.constraint() == Some("users_username_key") => {
-                    RequestError::new(StatusCode::BAD_REQUEST, Json(json!({"error": "Username taken!"})))
+                    RequestError::new(StatusCode::BAD_REQUEST, "Username taken!")
                 },
-                _ => RequestError::status(StatusCode::INTERNAL_SERVER_ERROR),
+                _ => RequestError::server(),
             }
         })?;
 
@@ -92,18 +91,18 @@ async fn login(
         .bind(&user.username)
         .fetch_one(&db)
         .await
-        .map_err(|_error| {
-            dbg!(_error);
-            RequestError::status(StatusCode::INTERNAL_SERVER_ERROR)
+        .map_err(|error| {
+            match error {
+                sqlx::Error::RowNotFound => RequestError::new(StatusCode::BAD_REQUEST, "Invalid username or password"),
+                _ => RequestError::server()
+            }
         })?;
 
     let password_valid = verify_password(&user.password, &db_user.password)
-        .map_err(|_| RequestError::status(StatusCode::INTERNAL_SERVER_ERROR))?;
+        .map_err(|_| RequestError::server())?;
 
     if !password_valid {
-        return Err(RequestError::new(StatusCode::BAD_REQUEST, Json(json!({
-            "error": "Invalid username or password"
-        }))))
+        return Err(RequestError::new(StatusCode::BAD_REQUEST, "Invalid username or password."))
     }
 
     // TODO: return a JWT

@@ -9,12 +9,17 @@ pub struct Error {
 }
 
 impl Error {
-	pub fn new(code: StatusCode, message: Json<Value>) -> Self {
-		Self { code, message }
+	pub fn new(code: StatusCode, message: &str) -> Self {
+		Self { code, message: Json(json!({ "error": message })) }
 	}
 
 	pub fn status(code: StatusCode) -> Self {
 		Self { code, message: Json(json!({})) }
+	}
+
+	/// Returns a 500 Internal Server Error
+	pub fn server() -> Self {
+		Self::new(StatusCode::INTERNAL_SERVER_ERROR, "internal server error")
 	}
 }
 
