@@ -1,5 +1,8 @@
+use std::env;
+
 use argon2::{password_hash::{rand_core::OsRng, Error as HashError, PasswordHasher, PasswordVerifier, SaltString}, Argon2, PasswordHash};
 use axum::{async_trait, extract::{FromRequest, Request}, http::StatusCode, routing::post, Extension, Json, Router};
+use jsonwebtoken::{encode, EncodingKey, Header};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sqlx::PgPool;
@@ -35,6 +38,13 @@ struct DBUser {
     id: i32,
     username: String,
     password: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct TokenClaims {
+    sub: String,
+    iat: usize,
+    exp: usize
 }
 
 #[async_trait]
@@ -105,20 +115,41 @@ async fn login(
         return Err(RequestError::new(StatusCode::BAD_REQUEST, "Invalid username or password."))
     }
 
+    let now = chrono::Utc::now();
+    let iat = now.timestamp() as usize;
+    let exp = (now + chrono::Duration::minutes(60)).timestamp() as usize;
+    let claims: TokenClaims = TokenClaims {
+        sub: db_user.id.to_string(),
+        exp,
+        iat,
+    };
+    let token = encode(
+        &Header::default(),
+        &claims,
+        &EncodingKey::from_secret(env::var("JWT_SECRET").unwrap().as_ref())
+    ).unwrap();
+
     // TODO: return a JWT
     Ok(Json(json!({
-        "success": "TOKEN"
+        "success": token
     })))
 }
 
 
 fn hash_password(password: String) -> Result<String, HashError> {
     let salt = SaltString::generate(&mut OsRng);
-    let password_hash = Argon2::default().hash_password(password.as_bytes(), &salt)?.to_string();
+    let password_hash = Argon2::default()
+        .hash_password(password.as_bytes(), &salt)?
+        .to_string();
+
     Ok(password_hash)
 }
 
 fn verify_password(password: &String, password_hash: &String) -> Result<bool, HashError> {
     let parsed_hash = PasswordHash::new(password_hash)?;
-    Ok(Argon2::default().verify_password(password.as_bytes(), &parsed_hash).is_ok())
+    let is_valid = Argon2::default()
+        .verify_password(password.as_bytes(), &parsed_hash)
+        .is_ok();
+
+    Ok(is_valid)
 }
