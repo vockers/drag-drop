@@ -1,3 +1,5 @@
+import SignupModal from "./SignupModal";
+
 export default function NavBar() {
     return (
         <div className="w-full flex justify-center bg-slate-50 shadow-sm mb-5">
@@ -8,7 +10,7 @@ export default function NavBar() {
                 </div>
                 <div className="h-full flex gap-2">
                     <button className="px-3 border-2 rounded-md hover:bg-slate-200 border-blue-500 p-1 text-blue-600 font-medium">LOGIN</button>
-                    <button className="px-3 rounded-md bg-blue-500 hover:bg-blue-600 text-slate-50 font-medium text-nowrap">SIGN UP</button>
+                    <SignupModal />
                 </div>
             </nav>
         </div>

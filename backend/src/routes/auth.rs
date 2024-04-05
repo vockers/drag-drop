@@ -22,8 +22,6 @@ struct SignUpRequest {
     username: String,
     #[validate(length(min = 6, max = 64, message = "must be between 6 and 64 characters"))]
     password: String,
-    #[validate(must_match(other = "password", message = "passwords do not match"))]
-    confirm_password: String,
 }
 
 #[derive(Deserialize)]
@@ -38,6 +36,12 @@ struct DBUser {
     id: i32,
     username: String,
     password: String,
+}
+
+#[derive(Serialize, Deserialize, sqlx::FromRow)]
+struct UserResponse {
+    id: i32,
+    username: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -70,14 +74,14 @@ where
 async fn signup(
     Extension(db): Extension<PgPool>,
     user: SignUpRequest
-) -> RequestResult<Json<Value>> {
+) -> RequestResult<Json<UserResponse>> {
     let hashed_password = hash_password(user.password)
         .map_err(|_| RequestError::server())?;
 
-    sqlx::query("INSERT INTO users (username, password) VALUES ($1, $2)")
+    let created_user: UserResponse = sqlx::query_as("INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id, username")
         .bind(&user.username)
         .bind(hashed_password)
-        .execute(&db)
+        .fetch_one(&db)
         .await
         .map_err(|error| { 
             match error {
@@ -88,9 +92,7 @@ async fn signup(
             }
         })?;
 
-    Ok(Json(json!({
-        "message": "success"
-    })))
+    Ok(Json(created_user))
 }
 
 async fn login(
