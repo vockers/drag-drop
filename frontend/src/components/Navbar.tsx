@@ -2,6 +2,7 @@ import useAuth from "@/hooks/useAuth";
 import SignupModal from "./SignupModal";
 import { useContext } from "react";
 import { AuthenticationContext } from "@/context/AuthContext";
+import LoginModal from "./LoginModal";
 
 export default function NavBar() {
     const { logout } = useAuth();
@@ -19,8 +20,8 @@ export default function NavBar() {
                         <button onClick={logout} className="px-3 border-2 rounded hover:bg-slate-200 border-blue-500 p-1 text-blue-600 font-medium">LOGOUT</button>
                         :
                         <>
-                        <button className="px-3 border-2 rounded hover:bg-slate-200 border-blue-500 p-1 text-blue-600 font-medium">LOGIN</button>
-                        <SignupModal />
+                            <LoginModal />
+                            <SignupModal />
                         </>
                     }
                 </div>
