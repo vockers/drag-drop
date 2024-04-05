@@ -24,7 +24,7 @@ export const AuthenticationContext = createContext<AuthContextProps>({
 
 export default function AuthContext({children}: {children: React.ReactNode}) {
     const [authState, setAuthState] = useState<AuthState>({
-        user: null,
+        user: localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user") as string) : null,
         loading: false,
         error: null,
     });

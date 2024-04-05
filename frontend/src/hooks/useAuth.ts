@@ -3,7 +3,7 @@ import axios from "axios";
 import { useContext } from "react"
 
 const useAuth = () => {
-    const {user, error, loading, setAuthState} = useContext(AuthenticationContext)
+    const {setAuthState} = useContext(AuthenticationContext)
 
     const login = async ({username, password}: {username: string, password: string}) => {
         setAuthState({user: null, loading: true, error: null});
@@ -40,6 +40,7 @@ const useAuth = () => {
                 loading: false,
                 error: null,
             });
+            localStorage.setItem("user", JSON.stringify(response.data));
         } catch (error: any) {
             setAuthState({
                 user: null,
@@ -49,9 +50,15 @@ const useAuth = () => {
         }
     }
 
+    const logout = () => {
+        setAuthState({user: null, loading: false, error: null});
+        localStorage.removeItem("user");
+    }
+
     return {
         login,
         signup,
+        logout,
     }
 }
 
