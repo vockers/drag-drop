@@ -1,4 +1,4 @@
-use axum::{routing::post, Extension, Json, Router};
+use axum::{routing::{get, post}, Extension, Json, Router};
 use serde::{Deserialize, Serialize};
 use sqlx::{PgPool, Postgres, Transaction};
 
@@ -7,6 +7,7 @@ use crate::error::{Error as RequestError, Result as RequestResult};
 pub fn routes() -> Router {
 	Router::new()
 		.route("/categories", post(create_category))
+		.route("/categories", get(get_all_categories))
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -15,8 +16,16 @@ struct Category {
 	children: Option<Vec<Category>>,
 }
 
+#[derive(Clone, Debug)]
 struct SubCategory {
 	category: Category,
+	parent_id: Option<i32>,
+}
+
+#[derive(sqlx::FromRow, Serialize)]
+struct DBCategory {
+	id: i32,
+	name: String,
 	parent_id: Option<i32>,
 }
 
@@ -74,4 +83,14 @@ async fn create_category(
 		.map_err(|_| RequestError::server())?;
 
 	Ok(Json(category))
+}
+
+/// get all categories handler - GET /api/categories
+async fn get_all_categories(Extension(db): Extension<PgPool>) -> RequestResult<Json<Vec<DBCategory>>> {
+	let categories: Vec<DBCategory> = sqlx::query_as("SELECT * FROM categories WHERE parent_id IS NULL")
+		.fetch_all(&db)
+		.await
+		.map_err(|_| RequestError::server())?;	
+
+    Ok(Json(categories))
 }
