@@ -1,7 +1,6 @@
 import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import Ajv from "ajv";
-import TreeNode from "./TreeNode";
 import axios from "axios";
 import { categorySchema } from "../config";
 
@@ -29,10 +28,6 @@ export default function CategoryUploader() {
         })
     }
 
-    const handleCancel = () => {
-        setCategory({});
-    }
-
     return (
         <>
             {uploaded ? (
@@ -51,7 +46,7 @@ export default function CategoryUploader() {
                                 <i className="fa fa-circle-arrow-up self-center"></i>
                                 <span className="font-medium">UPLOAD</span>
                             </button>
-                            <button onClick={handleCancel} className="px-3 py-2 rounded-md bg-red-500 text-slate-100 flex gap-2">
+                            <button onClick={() => setCategory({})} className="px-3 py-2 rounded-md bg-red-500 text-slate-100 flex gap-2">
                                 <i className="fa fa-circle-arrow-up self-center"></i>
                                 <span className="font-medium">CANCEL</span>
                             </button>
@@ -68,4 +63,39 @@ export default function CategoryUploader() {
             )}
         </>
     );
+}
+
+function TreeNode({node, showChildrenNow}: {node: any, showChildrenNow: boolean}) {
+    const [showChildren, setShowChildren] = useState(showChildrenNow);
+    const hasChildren = node.hasOwnProperty("children");
+
+    const handleClick = () => {
+        setShowChildren(!showChildren);
+    }
+
+    return (
+        <div className="text-slate-600 w-full">
+            <button onClick={handleClick} className={"w-full px-3 py-2 flex gap-2 mb-1 rounded-md hover:bg-slate-300 " + (showChildren && "bg-slate-300")}>
+                {hasChildren ? (
+                    showChildren ? (
+                        <i className="w-4 fa fa-chevron-down self-center text-xs"></i>
+                    ) : (
+                        <i className="w-4 fa fa-chevron-right self-center text-xs"></i>
+                    )
+                ) : (
+                    <div className="pl-4"></div>
+                )}
+                <h1>{node.name}</h1>
+            </button>
+            {hasChildren && showChildren &&
+                <div className="pl-3">
+                    {node.children.map((child: any) => {
+                        return (
+                            <TreeNode node={child} key={child.name} showChildrenNow={false} />
+                        )
+                    })}
+                </div>
+            }
+        </div>
+    )
 }

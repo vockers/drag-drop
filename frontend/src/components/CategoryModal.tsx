@@ -64,7 +64,7 @@ function TreeNode({node}: {node: any}) {
     const [showChildren, setShowChildren] = useState(true);
     const [children, setChildren] = useState([]);
 
-    const fetchChildren = () => {
+    useEffect(() => {
         try {
             axios.get(`${import.meta.env.VITE_API_URL}/categories/${node.id}`).then((response) => {
                 return response.data
@@ -74,10 +74,6 @@ function TreeNode({node}: {node: any}) {
         } catch (error) {
             console.log(error);
         }
-    }
-
-    useEffect(() => {
-        fetchChildren(); 
     }, [])
 
     const handleClick = () => {
@@ -86,7 +82,7 @@ function TreeNode({node}: {node: any}) {
 
     return (
         <div className="text-slate-600 w-full">
-            <button onClick={handleClick} className={"w-full px-3 py-2 flex gap-2 mb-1 rounded-md hover:bg-slate-300 " + (showChildren && "bg-slate-300")}>
+            <button onClick={handleClick} className={"w-full px-3 py-2 flex gap-2 mb-1 rounded-md hover:bg-slate-300 " + (children.length > 0 && showChildren && "bg-slate-300")}>
                 {children.length > 0 ? (
                     showChildren ? (
                         <i className="w-4 fa fa-chevron-down self-center text-xs"></i>
