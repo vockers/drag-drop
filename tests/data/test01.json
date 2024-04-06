@@ -1,0 +1,18 @@
+{
+    "name": "Foo",
+    "children": [
+        {
+            "name": "Bar",
+            "children": [
+                {
+                    "name": "Baz",
+                    "children": [
+                        {
+                            "name": "Qux"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
