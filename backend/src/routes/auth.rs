@@ -4,8 +4,8 @@ use argon2::{password_hash::{rand_core::OsRng, Error as HashError, PasswordHashe
 use axum::{async_trait, extract::{FromRequest, Request}, http::StatusCode, routing::post, Extension, Json, Router};
 use jsonwebtoken::{encode, EncodingKey, Header};
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
 use sqlx::PgPool;
+use tower_cookies::{Cookie, Cookies};
 use validator::Validate;
 
 use crate::error::{Error as RequestError, Result as RequestResult};
@@ -71,7 +71,32 @@ where
     }
 }
 
+/// Generates a JWT token and sets it as a cookie.
+fn authenticate_user(user_id: i32, cookies: &Cookies) {
+
+    let now = chrono::Utc::now();
+    let iat = now.timestamp() as usize;
+    let exp = (now + chrono::Duration::minutes(60)).timestamp() as usize;
+    let claims: TokenClaims = TokenClaims {
+        sub: user_id.to_string(),
+        exp,
+        iat,
+    };
+    let token = encode(
+        &Header::default(),
+        &claims,
+        &EncodingKey::from_secret(env::var("JWT_SECRET").unwrap().as_ref())
+    ).unwrap();
+
+    let cookie = Cookie::build(("token", token))
+        .http_only(true)
+        .into();
+
+    cookies.add(cookie);
+}
+
 async fn signup(
+    cookies: Cookies,
     Extension(db): Extension<PgPool>,
     user: SignUpRequest
 ) -> RequestResult<Json<UserResponse>> {
@@ -92,13 +117,16 @@ async fn signup(
             }
         })?;
 
+    authenticate_user(created_user.id, &cookies);
+
     Ok(Json(created_user))
 }
 
 async fn login(
+    cookies: Cookies,
     Extension(db): Extension<PgPool>,
     Json(user): Json<LoginRequest>,
-) -> RequestResult<Json<Value>> {
+) -> RequestResult<Json<UserResponse>> {
     let db_user = sqlx::query_as::<_, DBUser>("SELECT * FROM users WHERE username = $1")
         .bind(&user.username)
         .fetch_one(&db)
@@ -117,24 +145,12 @@ async fn login(
         return Err(RequestError::new(StatusCode::BAD_REQUEST, "Invalid username or password."))
     }
 
-    let now = chrono::Utc::now();
-    let iat = now.timestamp() as usize;
-    let exp = (now + chrono::Duration::minutes(60)).timestamp() as usize;
-    let claims: TokenClaims = TokenClaims {
-        sub: db_user.id.to_string(),
-        exp,
-        iat,
-    };
-    let token = encode(
-        &Header::default(),
-        &claims,
-        &EncodingKey::from_secret(env::var("JWT_SECRET").unwrap().as_ref())
-    ).unwrap();
+    authenticate_user(db_user.id, &cookies);
 
-    // TODO: return a JWT
-    Ok(Json(json!({
-        "success": token
-    })))
+    Ok(Json(UserResponse {
+        id: db_user.id,
+        username: db_user.username,
+    }))
 }
 
 

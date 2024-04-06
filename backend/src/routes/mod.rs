@@ -3,6 +3,7 @@ mod categories;
 
 use axum::{http::Method, Extension, Router};
 use sqlx::PgPool;
+use tower_cookies::CookieManagerLayer;
 use tower_http::cors::{Any, CorsLayer};
 
 pub fn routes(db: PgPool) -> Router {
@@ -19,4 +20,5 @@ pub fn routes(db: PgPool) -> Router {
         .nest("/api", api_routes)
         .layer(Extension(db))
         .layer(cors)
+        .layer(CookieManagerLayer::new())
 }
