@@ -1,4 +1,4 @@
-use axum::{routing::{get, post}, Extension, Json, Router};
+use axum::{extract::Path, routing::{get, post}, Extension, Json, Router};
 use serde::{Deserialize, Serialize};
 use sqlx::{PgPool, Postgres, Transaction};
 
@@ -8,6 +8,7 @@ pub fn routes() -> Router {
 	Router::new()
 		.route("/categories", post(create_category))
 		.route("/categories", get(get_all_categories))
+		.route("/categories/:category_id", get(get_one_category))
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -27,6 +28,13 @@ struct DBCategory {
 	id: i32,
 	name: String,
 	parent_id: Option<i32>,
+}
+
+#[derive(Serialize)]
+struct ResponseCategory {
+	id: i32,
+	name: String,
+	children: Option<Vec<ResponseCategory>>,
 }
 
 /// Insert category into database.
@@ -98,11 +106,56 @@ async fn create_category(
 }
 
 /// get all categories handler - GET /api/categories
-async fn get_all_categories(Extension(db): Extension<PgPool>) -> RequestResult<Json<Vec<DBCategory>>> {
+async fn get_all_categories(
+	Extension(db): Extension<PgPool>
+) -> RequestResult<Json<Vec<DBCategory>>> {
 	let categories: Vec<DBCategory> = sqlx::query_as("SELECT * FROM categories WHERE parent_id IS NULL")
 		.fetch_all(&db)
 		.await
 		.map_err(|_| RequestError::server())?;	
 
     Ok(Json(categories))
+}
+
+/// Get one category and all its children handler - GET /api/categories/:category_id
+async fn get_one_category(
+	Path(category_id): Path<i32>,
+	Extension(db): Extension<PgPool>,
+) -> RequestResult<Json<ResponseCategory>> {
+
+	let mut transaction = db.begin()
+		.await
+		.map_err(|_| RequestError::server())?;
+
+	let category: DBCategory = sqlx::query_as("SELECT * FROM categories WHERE id = $1")
+		.bind(category_id)
+		.fetch_one(&mut *transaction)
+		.await
+		.map_err(|_| RequestError::server())?;
+
+	let mut root_category = ResponseCategory {
+		id: category.id,
+		name: category.name,
+		children: Some(Vec::new()),
+	};
+
+	let children: Vec<DBCategory> = sqlx::query_as("SELECT * FROM categories WHERE parent_id = $1")
+		.bind(category_id)
+		.fetch_all(&mut *transaction)
+		.await
+		.map_err(|_| RequestError::server())?;
+
+	transaction.commit()
+		.await
+		.map_err(|_| RequestError::server())?;
+
+	for child in children {
+		root_category.children.as_mut().unwrap().push(ResponseCategory {
+			id: child.id,
+			name: child.name,
+			children: None,
+		});
+	}
+
+	Ok(Json(root_category))
 }

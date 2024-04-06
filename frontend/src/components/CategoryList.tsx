@@ -1,8 +1,7 @@
 import axios from "axios"
 import { useEffect, useState } from "react"
+import CategoryModal from "./CategoryModal"
 
-const fetchAllCategories = async () => {
-}
 export default function CategoryList() {
     const [categories, setCategories] = useState([])
 
@@ -20,10 +19,10 @@ export default function CategoryList() {
 
     return (
         <>
-            { categories.map((category: any) => (
-                <div className="w-full max-w-screen-md mb-5 rounded-md bg-white shadow-md p-6 flex justify-between">
+            { categories.map((category: any, index) => (
+                <div key={index} className="w-full max-w-screen-md mb-5 rounded-md bg-white shadow-md p-6 flex justify-between">
                     <h2>{category.name}</h2>
-                    <button className="text-blue-500 font-semibold">SHOW</button>
+                    <CategoryModal category_id={category.id} />
                 </div>)
             ) }
         </>
