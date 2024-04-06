@@ -1,5 +1,6 @@
-mod error;
-mod routes;
+pub mod error;
+pub mod routes;
+pub mod extractors;
 
 use std::env;
 use sqlx::postgres::PgPoolOptions;

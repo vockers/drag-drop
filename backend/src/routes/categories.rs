@@ -2,7 +2,7 @@ use axum::{routing::{get, post}, Extension, Json, Router};
 use serde::{Deserialize, Serialize};
 use sqlx::{PgPool, Postgres, Transaction};
 
-use crate::error::{Error as RequestError, Result as RequestResult};
+use crate::{error::{Error as RequestError, Result as RequestResult}, extractors::auth_extractor::Auth};
 
 pub fn routes() -> Router {
 	Router::new()
@@ -54,6 +54,7 @@ async fn insert_category(
 
 /// create category handler - POST /api/categories
 async fn create_category(
+	Auth(user_id): Auth,
 	Extension(db): Extension<PgPool>,
 	Json(category): Json<Category>,
 ) -> RequestResult<Json<Category>> {
@@ -65,9 +66,13 @@ async fn create_category(
 		category: category.clone(),
 		parent_id: None,
 	}];
+	let mut root_id = Option::<i32>::None;
 
 	while let Some(sub_category) = stack.pop() {
 		let id = insert_category(&mut transaction, &sub_category.category, sub_category.parent_id).await?;
+		if root_id.is_none() {
+			root_id = Some(id);
+		}
 		if let Some(children) = sub_category.category.children {
 			for child in children {
 				stack.push(SubCategory {
@@ -77,6 +82,13 @@ async fn create_category(
 			}
 		}
 	}
+
+	sqlx::query("INSERT INTO user_categories (user_id, category_id) VALUES ($1, $2)")
+		.bind(user_id)
+		.bind(root_id)
+		.execute(&mut *transaction)
+		.await
+		.map_err(|_| RequestError::server())?;
 
 	transaction.commit()
 		.await

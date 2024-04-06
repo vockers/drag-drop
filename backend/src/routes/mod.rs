@@ -1,5 +1,5 @@
-mod auth;
-mod categories;
+pub mod auth;
+pub mod categories;
 
 use axum::{http::Method, Extension, Router};
 use sqlx::PgPool;
