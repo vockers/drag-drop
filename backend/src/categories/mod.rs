@@ -14,6 +14,13 @@ pub struct Category {
 	parent_id: Option<i32>,
 }
 
+#[derive(sqlx::FromRow, Serialize)]
+pub struct RootCategory {
+	id: i32,
+	name: String,
+	user_id: i32,
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct CategoryRequest {
 	name: String,

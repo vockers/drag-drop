@@ -1,6 +1,7 @@
+import { AuthenticationContext } from "@/context/AuthContext";
 import { Box, CircularProgress, Modal } from "@mui/material";
 import axios from "axios";
-import { useEffect, useState } from "react"
+import { useContext, useEffect, useState } from "react"
 
 const style = {
     position: 'absolute' as 'absolute',
@@ -14,30 +15,21 @@ const style = {
     borderRadius: "4px",
 };
 
-export default function CategoryModal({ category_id }: { category_id: number }) {
+export default function CategoryModal({ category }: { category: any }) {
     const [open, setOpen] = useState(false)
-    const [loading, setLoading] = useState(true)
-    const [category, setCategory] = useState({})
+    
+    const { user } = useContext(AuthenticationContext);
 
     const toggleModal = () => setOpen(!open);
 
-    useEffect(() => {
-        try {
-            axios.get(`${import.meta.env.VITE_API_URL}/categories/${category_id}`).then((response) => {
-                return response.data
-            }).then((data) => {
-                setLoading(false);
-                setCategory(data);
-            })
-        } catch (error) {
-            setLoading(false);
-            console.log(error)
-        }
-    }, [])
-
     return (
         <>
-            <button onClick={toggleModal} className="px-3 border-2 rounded hover:bg-slate-200 border-blue-500 p-1 text-blue-600 font-medium">SHOW</button>
+            <div className="flex gap-2">
+                { category.user_id === user?.id && (
+                    <button onClick={toggleModal} className="px-3 py-1 rounded bg-red-500 hover:bg-red-600 text-slate-50 font-medium">DELETE</button>
+                )}
+                <button onClick={toggleModal} className="px-3 py-1 border-2 rounded hover:bg-slate-200 border-blue-500 text-blue-600 font-medium">SHOW</button>
+            </div>
             <Modal
                 open={open}
                 onClose={toggleModal}
@@ -46,15 +38,9 @@ export default function CategoryModal({ category_id }: { category_id: number }) 
             >
                 <Box sx={style}>
                     <div className="h-[500px]">
-                        {loading ? (
-                            <div className="py-24 px-2 h-full flex justify-center items-center">
-                                <CircularProgress />
-                            </div>
-                        ) : (
-                            <div className="h-full grow bg-slate-200 p-3 rounded-md">
-                                <TreeNode node={category} />
-                            </div>
-                        )}
+                        <div className="h-full grow bg-slate-200 p-3 rounded-md">
+                            <TreeNode node={category} />
+                        </div>
                     </div>
                 </Box>
             </Modal>

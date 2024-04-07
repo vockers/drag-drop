@@ -19,3 +19,6 @@ docker-compose up # add '-d' to run in background and 'docker-compose down' to s
 
 
 ## Frontend (React) - http://localhost/8080
+Test files to upload can be found in **./tests/data**
+
+### Screenshots
