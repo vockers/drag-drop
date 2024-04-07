@@ -64,7 +64,7 @@ export default function CategoryUploader() {
         )}
         {!user &&
             <div className="absolute h-full w-full top-0 left-0 rounded bg-black bg-opacity-60 flex flex-col justify-center items-center">
-                <h1 className="bg-slate-900 opacity-70 w-full p-5 text-center text-slate-50 text-1xl font-semibold uppercase">Please login or sign up</h1>
+                <h1 className="bg-slate-900 opacity-65 w-full p-5 text-center text-slate-50 text-1xl font-semibold uppercase">Please login or sign up</h1>
             </div>
         }
         </div>

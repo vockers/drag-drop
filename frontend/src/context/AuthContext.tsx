@@ -7,8 +7,6 @@ interface User {
 
 interface AuthState {
     user: User | null;
-    loading: boolean;
-    error: string | null;
 }
 
 interface AuthContextProps extends AuthState {
@@ -17,16 +15,12 @@ interface AuthContextProps extends AuthState {
 
 export const AuthenticationContext = createContext<AuthContextProps>({
     user: null,
-    loading: false,
-    error: null,
     setAuthState: () => {},
 });
 
 export default function AuthContext({children}: {children: React.ReactNode}) {
     const [authState, setAuthState] = useState<AuthState>({
         user: localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user") as string) : null,
-        loading: false,
-        error: null,
     });
 
     return (

@@ -1,6 +1,6 @@
 import { AuthenticationContext } from "@/context/AuthContext";
-import useAuth from "@/hooks/useAuth";
 import { Alert, Box, CircularProgress, Modal } from "@mui/material";
+import axios from "axios";
 import { useContext, useEffect, useState } from "react";
 
 const style = {
@@ -22,18 +22,33 @@ export default function LoginModal() {
         password: "",
     })
     const [disabled, setDisabled] = useState(true);
-    const { login } = useAuth();
-    const { loading, error } = useContext(AuthenticationContext);
-
-    const toggleModal = () => setOpen(!open);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+    const { setAuthState } = useContext(AuthenticationContext);
 
     useEffect(() => {
         setDisabled(!(inputs.username && inputs.password));
     }, [inputs])
 
-    const handleClick = () => {
-        login({ username: inputs.username, password: inputs.password });
+    const login = async ({username, password}: {username: string, password: string}) => {
+        setAuthState({user: null});
+        setLoading(true);
+        try {
+            const response = await axios.post(`${import.meta.env.VITE_API_URL}/login`, {
+                username,
+                password
+            });
+            setAuthState({ user: response.data });
+            setLoading(false);
+            localStorage.setItem("user", JSON.stringify(response.data));
+        } catch (error: any) {
+            setError(error.response.data.error);
+            setLoading(false);
+        }
     }
+
+    const toggleModal = () => setOpen(!open);
+    const onSubmit = () => login({ username: inputs.username, password: inputs.password });
 
     return (
         <div>
@@ -51,21 +66,21 @@ export default function LoginModal() {
                                 <CircularProgress />
                             </div>
                             :
-                            <div className="p-2 text-slate-700 flex-col justify-center">
-                                <div className="uppercase font-bold text-center pb-2 my-10">
+                            <div className="p-2 h-full text-slate-700 flex flex-col justify-center">
+                                <div className="uppercase font-bold text-center pb-2 mb-10">
                                     <p className="text-xl">
                                         Login
                                     </p>
                                 </div>
                                 {error ? <Alert severity="error" className="mb-4">{error}</Alert> : ""}
-                                <div className="m-auto">
-                                    <div className="my-5 flex justify-between">
+                                <div>
+                                    <div className="my-5">
                                         <input type="text" className="border rounded p-2 py-3 w-full" placeholder="Username" value={inputs.username} onChange={e => setInputs({ ...inputs, username: e.target.value })} />
                                     </div>
-                                    <div className="my-5 flex justify-between">
+                                    <div className="my-5">
                                         <input type="password" className="border rounded p-2 py-3 w-full" placeholder="Password" value={inputs.password} onChange={e => setInputs({ ...inputs, password: e.target.value })} />
                                     </div>
-                                    <button onClick={handleClick} className="uppercase bg-blue-500 w-full text-white p-3 rounded mb-5 text-lg disabled:bg-gray-400" disabled={disabled}>
+                                    <button onClick={onSubmit} className="uppercase bg-blue-500 w-full text-white p-3 rounded mb-5 text-lg disabled:bg-gray-400" disabled={disabled}>
                                         Login
                                     </button>
                                 </div>
