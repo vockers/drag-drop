@@ -20,8 +20,8 @@ export default function CategoryList() {
     return (
         <>
             { categories.map((category: any, index) => (
-                <div key={index} className="w-full max-w-screen-md mb-5 rounded-md bg-white shadow-md p-6 flex justify-between">
-                    <h2>{category.name}</h2>
+                <div key={index} className="w-full max-w-screen-md mb-5 rounded-md bg-white shadow-md p-6 flex justify-between items-center">
+                    <h2 className="text-slate-600 font-semibold text-lg">{category.name}</h2>
                     <CategoryModal category_id={category.id} />
                 </div>)
             ) }

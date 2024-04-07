@@ -122,6 +122,7 @@ async fn signup(
     Ok(Json(created_user))
 }
 
+/// login handler - Returns a JWT as a Cookie - POST /api/auth/login
 async fn login(
     cookies: Cookies,
     Extension(db): Extension<PgPool>,

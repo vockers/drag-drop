@@ -105,7 +105,7 @@ async fn create_category(
 	Ok(Json(category))
 }
 
-/// get all categories handler - GET /api/categories
+/// Get all categories handler - GET /api/categories
 async fn get_all_categories(
 	Extension(db): Extension<PgPool>
 ) -> RequestResult<Json<Vec<DBCategory>>> {

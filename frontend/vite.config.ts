@@ -9,8 +9,13 @@ export default defineConfig({
       '@': '/src'
     }
   },
+  preview: {
+    port: 8080,
+    strictPort: true,
+  },
   server: {
     host: true,
-    port: 8080
+    port: 8080,
+    strictPort: true,
   }
 })

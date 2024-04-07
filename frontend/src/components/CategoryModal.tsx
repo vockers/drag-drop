@@ -37,7 +37,7 @@ export default function CategoryModal({ category_id }: { category_id: number }) 
 
     return (
         <>
-            <button onClick={toggleModal} className="text-blue-500 font-semibold">SHOW</button>
+            <button onClick={toggleModal} className="px-3 border-2 rounded hover:bg-slate-200 border-blue-500 p-1 text-blue-600 font-medium">SHOW</button>
             <Modal
                 open={open}
                 onClose={toggleModal}
@@ -51,7 +51,9 @@ export default function CategoryModal({ category_id }: { category_id: number }) 
                                 <CircularProgress />
                             </div>
                         ) : (
-                            <TreeNode node={category} />
+                            <div className="h-full grow bg-slate-200 p-3 rounded-md">
+                                <TreeNode node={category} />
+                            </div>
                         )}
                     </div>
                 </Box>
