@@ -4,7 +4,7 @@ use axum::{async_trait, extract::FromRequestParts, http::{request::Parts, Status
 use axum_extra::{headers::{authorization::Bearer, Authorization}, TypedHeader};
 use jsonwebtoken::{decode, DecodingKey, Validation};
 
-use crate::{error::{Error as RequestError, Result as RequestResult}, routes::auth::TokenClaims};
+use crate::{error::{Error as RequestError, Result as RequestResult}, auth::TokenClaims};
 
 pub struct Auth(pub i32);
 

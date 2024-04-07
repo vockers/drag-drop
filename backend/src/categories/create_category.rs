@@ -1,7 +1,7 @@
 use axum::{http::StatusCode, Extension, Json};
 use sqlx::PgPool;
 
-use crate::{error::{Error as RequestError, Result as RequestResult}, extractors::auth_extractor::Auth};
+use crate::{auth::auth_extractor::Auth, error::{Error as RequestError, Result as RequestResult}};
 
 use super::{Category, CategoryRequest};
 

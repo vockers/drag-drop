@@ -1,6 +1,7 @@
+pub mod auth;
+pub mod categories;
 pub mod error;
 pub mod routes;
-pub mod extractors;
 
 use std::env;
 use sqlx::postgres::PgPoolOptions;

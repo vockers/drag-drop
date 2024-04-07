@@ -1,6 +1,3 @@
-pub mod auth;
-pub mod categories;
-
 use axum::{http::Method, Extension, Router};
 use sqlx::PgPool;
 use tower_cookies::CookieManagerLayer;
@@ -13,8 +10,8 @@ pub fn routes(db: PgPool) -> Router {
         .allow_origin(Any);
 
     let api_routes = Router::new()
-        .merge(categories::routes())
-        .merge(auth::router());
+        .merge(crate::categories::routes())
+        .merge(crate::auth::router());
     
     Router::new()
         .nest("/api", api_routes)
