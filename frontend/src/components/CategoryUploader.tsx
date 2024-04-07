@@ -23,7 +23,11 @@ export default function CategoryUploader() {
     const { isDragAccept, getRootProps, getInputProps } = useDropzone({onDrop, multiple: false, accept: {"application/json": [".json"]}})
 
     const handleUpload = () => {
-        axios.post(`${import.meta.env.VITE_API_URL}/categories`, category).then((_) => {
+        axios.post(
+            `${import.meta.env.VITE_API_URL}/categories`,
+            category, 
+            {headers: { Authorization: `Bearer ${user?.token}`}})
+        .then((_) => {
             setUploaded(true);
         }).catch((error) => {
             console.log(error)

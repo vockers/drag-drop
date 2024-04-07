@@ -1,8 +1,8 @@
 use std::env;
 
 use axum::{async_trait, extract::FromRequestParts, http::{request::Parts, StatusCode}};
+use axum_extra::{headers::{authorization::Bearer, Authorization}, TypedHeader};
 use jsonwebtoken::{decode, DecodingKey, Validation};
-use tower_cookies::Cookies;
 
 use crate::{error::{Error as RequestError, Result as RequestResult}, routes::auth::TokenClaims};
 
@@ -16,15 +16,14 @@ where
     type Rejection = RequestError;
 
     async fn from_request_parts(parts: &mut Parts, _state: &S) -> RequestResult<Self> {
-        let cookies = Cookies::from_request_parts(parts, _state)
+        let authorization = TypedHeader::<Authorization<Bearer>>::from_request_parts(parts, _state)
             .await
-            .map_err(|_| RequestError::server())?;
+            .map_err(|_| RequestError::new(StatusCode::BAD_REQUEST, "Missing authorization header!"))?;
 
-        let jwt = cookies.get("token")
-            .ok_or(RequestError::new(StatusCode::UNAUTHORIZED, "Not logged in!"))?;
+        let jwt = authorization.token();
 
         let token = decode::<TokenClaims>(
-            jwt.value(),
+            jwt,
             &DecodingKey::from_secret(env::var("JWT_SECRET").unwrap().as_ref()),
             &Validation::default())
             .map_err(|_| RequestError::new(StatusCode::UNAUTHORIZED, "Invalid token!"))?;

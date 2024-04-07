@@ -5,7 +5,6 @@ use axum::{async_trait, extract::{FromRequest, Request}, http::StatusCode, routi
 use jsonwebtoken::{encode, EncodingKey, Header};
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
-use tower_cookies::{Cookie, Cookies};
 use validator::Validate;
 
 use crate::error::{Error as RequestError, Result as RequestResult};
@@ -42,6 +41,7 @@ struct DBUser {
 struct UserResponse {
     id: i32,
     username: String,
+    token: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -72,8 +72,7 @@ where
 }
 
 /// Generates a JWT token and sets it as a cookie.
-fn authenticate_user(user_id: i32, cookies: &Cookies) {
-
+fn generate_jwt(user_id: i32) -> String {
     let now = chrono::Utc::now();
     let iat = now.timestamp() as usize;
     let exp = (now + chrono::Duration::minutes(600)).timestamp() as usize;
@@ -88,22 +87,17 @@ fn authenticate_user(user_id: i32, cookies: &Cookies) {
         &EncodingKey::from_secret(env::var("JWT_SECRET").unwrap().as_ref())
     ).unwrap();
 
-    let cookie = Cookie::build(("token", token))
-        .http_only(true)
-        .into();
-
-    cookies.add(cookie);
+    token
 }
 
 async fn signup(
-    cookies: Cookies,
     Extension(db): Extension<PgPool>,
     user: SignUpRequest
 ) -> RequestResult<Json<UserResponse>> {
     let hashed_password = hash_password(user.password)
         .map_err(|_| RequestError::server())?;
 
-    let created_user: UserResponse = sqlx::query_as("INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id, username")
+    let created_user: DBUser = sqlx::query_as("INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id, username")
         .bind(&user.username)
         .bind(hashed_password)
         .fetch_one(&db)
@@ -117,14 +111,15 @@ async fn signup(
             }
         })?;
 
-    authenticate_user(created_user.id, &cookies);
-
-    Ok(Json(created_user))
+    Ok(Json(UserResponse {
+        id: created_user.id,
+        username: created_user.username,
+        token: generate_jwt(created_user.id),
+    }))
 }
 
 /// login handler - Returns a JWT as a Cookie - POST /api/auth/login
 async fn login(
-    cookies: Cookies,
     Extension(db): Extension<PgPool>,
     Json(user): Json<LoginRequest>,
 ) -> RequestResult<Json<UserResponse>> {
@@ -146,14 +141,12 @@ async fn login(
         return Err(RequestError::new(StatusCode::BAD_REQUEST, "Invalid username or password."))
     }
 
-    authenticate_user(db_user.id, &cookies);
-
     Ok(Json(UserResponse {
         id: db_user.id,
         username: db_user.username,
+        token: generate_jwt(db_user.id),
     }))
 }
-
 
 fn hash_password(password: String) -> Result<String, HashError> {
     let salt = SaltString::generate(&mut OsRng);

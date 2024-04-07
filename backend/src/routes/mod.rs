@@ -19,6 +19,6 @@ pub fn routes(db: PgPool) -> Router {
     Router::new()
         .nest("/api", api_routes)
         .layer(Extension(db))
-        .layer(cors)
         .layer(CookieManagerLayer::new())
+        .layer(cors)
 }

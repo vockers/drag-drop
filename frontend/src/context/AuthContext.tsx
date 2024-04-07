@@ -3,6 +3,7 @@ import { Dispatch, SetStateAction, createContext, useState } from "react";
 interface User {
     id: number;
     username: string;
+    token: string;
 }
 
 interface AuthState {
