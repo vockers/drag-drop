@@ -1,7 +1,7 @@
 use axum::{extract::Path, Extension, Json};
 use sqlx::PgPool;
 
-use crate::error::{Error as RequestError, Result as RequestResult};
+use crate::error::Result as RequestResult;
 
 use super::{Category, CategoryResponse};
 
@@ -12,14 +12,12 @@ pub async fn get_single_category(
 ) -> RequestResult<Json<CategoryResponse>> {
 
 	let mut transaction = db.begin()
-		.await
-		.map_err(|_| RequestError::server())?;
+		.await?;
 
 	let category: Category = sqlx::query_as("SELECT * FROM categories WHERE id = $1")
 		.bind(category_id)
 		.fetch_one(&mut *transaction)
-		.await
-		.map_err(|_| RequestError::server())?;
+		.await?;
 
 	let mut root_category = CategoryResponse {
 		id: category.id,
@@ -30,12 +28,10 @@ pub async fn get_single_category(
 	let children: Vec<Category> = sqlx::query_as("SELECT * FROM categories WHERE parent_id = $1")
 		.bind(category_id)
 		.fetch_all(&mut *transaction)
-		.await
-		.map_err(|_| RequestError::server())?;
+		.await?;
 
 	transaction.commit()
-		.await
-		.map_err(|_| RequestError::server())?;
+		.await?;
 
 	for child in children {
 		root_category.children.as_mut().unwrap().push(CategoryResponse {

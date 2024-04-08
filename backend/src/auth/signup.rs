@@ -1,4 +1,4 @@
-use axum::{http::StatusCode, Extension, Json};
+use axum::{Extension, Json};
 use sqlx::PgPool;
 
 use crate::error::{Error as RequestError, Result as RequestResult};
@@ -10,7 +10,7 @@ pub async fn signup(
     user: SignUpRequest
 ) -> RequestResult<Json<UserResponse>> {
     let hashed_password = hash_password(user.password)
-        .map_err(|_| RequestError::server())?;
+        .map_err(|_| RequestError::InternalServerError)?;
 
     let created_user: User = sqlx::query_as("INSERT INTO users (username, password) VALUES ($1, $2) RETURNING *")
         .bind(&user.username)
@@ -20,9 +20,9 @@ pub async fn signup(
         .map_err(|error| { 
             match error {
                 sqlx::Error::Database(db_error) if db_error.constraint() == Some("users_username_key") => {
-                    RequestError::new(StatusCode::BAD_REQUEST, "Username taken!")
+                    RequestError::BadRequestWithError("Username taken!".to_string())
                 },
-                _ => RequestError::server(),
+                _ => RequestError::InternalServerError,
             }
         })?;
 

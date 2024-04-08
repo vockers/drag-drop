@@ -3,7 +3,7 @@ pub mod login;
 pub mod signup;
 
 use argon2::{password_hash::{rand_core::OsRng, Error as HashError, PasswordHasher, PasswordVerifier, SaltString}, Argon2, PasswordHash};
-use axum::{async_trait, extract::{FromRequest, Request}, http::StatusCode, routing::post, Json, Router};
+use axum::{async_trait, extract::{FromRequest, Request}, routing::post, Json, Router};
 use jsonwebtoken::{encode, EncodingKey, Header};
 use serde::{Deserialize, Serialize};
 use std::env;
@@ -59,10 +59,10 @@ where
     async fn from_request(request: Request, state: &S) -> RequestResult<Self> {
         let Json(user) = Json::<Self>::from_request(request, state)
             .await
-            .map_err(|_| RequestError::status(StatusCode::BAD_REQUEST))?;
+            .map_err(|_| RequestError::BadRequest)?;
 
         if let Err(errors) = user.validate() {
-            return Err(RequestError::new(StatusCode::BAD_REQUEST, &errors.to_string()))
+            return Err(RequestError::BadRequestWithError(errors.to_string()));
         }
 
         Ok(user)   

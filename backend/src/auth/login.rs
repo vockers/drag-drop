@@ -1,4 +1,4 @@
-use axum::{http::StatusCode, Extension, Json};
+use axum::{Extension, Json};
 use sqlx::PgPool;
 
 use crate::error::{Error as RequestError, Result as RequestResult};
@@ -16,16 +16,14 @@ pub async fn login(
         .await
         .map_err(|error| {
             match error {
-                sqlx::Error::RowNotFound => RequestError::new(StatusCode::BAD_REQUEST, "Invalid username or password"),
-                _ => RequestError::server()
+                sqlx::Error::RowNotFound => RequestError::BadRequestWithError("Invalid username or password".to_string()),
+                _ => RequestError::InternalServerError
             }
         })?;
 
-    let password_valid = verify_password(&user.password, &db_user.password)
-        .map_err(|_| RequestError::server())?;
-
-    if !password_valid {
-        return Err(RequestError::new(StatusCode::BAD_REQUEST, "Invalid username or password."))
+    if !verify_password(&user.password, &db_user.password)
+        .map_err(|_| RequestError::InternalServerError)? {
+        return Err(RequestError::BadRequestWithError("Invalid username or password.".to_string()));
     }
 
     Ok(Json(UserResponse {

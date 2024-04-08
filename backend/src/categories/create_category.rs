@@ -1,7 +1,7 @@
 use axum::{http::StatusCode, Extension, Json};
 use sqlx::PgPool;
 
-use crate::{auth::auth_extractor::Auth, error::{Error as RequestError, Result as RequestResult}};
+use crate::{auth::auth_extractor::Auth, error::Result as RequestResult};
 
 use super::{Category, CategoryRequest};
 
@@ -18,14 +18,12 @@ pub async fn create_category(
 	Json(category): Json<CategoryRequest>,
 ) -> RequestResult<StatusCode> {
 	let mut transaction = db.begin()
-		.await
-		.map_err(|_| RequestError::server())?;
+		.await?;
 
     let root_category: Category = sqlx::query_as("INSERT INTO categories (name) VALUES ($1) RETURNING *")
 		.bind(&category.name)
         .fetch_one(&mut *transaction)
-        .await
-        .map_err(|_| RequestError::server())?;
+        .await?;
 	
 	let mut stack: Vec<ChildCategory> = vec![];
 
@@ -43,8 +41,7 @@ pub async fn create_category(
     		.bind(&sub_category.category.name)
     		.bind(sub_category.parent_id)
             .fetch_one(&mut *transaction)
-            .await
-            .map_err(|_| RequestError::server())?;
+            .await?;
 
 		if let Some(children) = sub_category.category.children {
 			for child in children {
@@ -60,12 +57,10 @@ pub async fn create_category(
 		.bind(user_id)
 		.bind(root_category.id)
 		.execute(&mut *transaction)
-		.await
-		.map_err(|_| RequestError::server())?;
+		.await?;
 
 	transaction.commit()
-		.await
-		.map_err(|_| RequestError::server())?;
+		.await?;
 
 	Ok(StatusCode::CREATED)
 }

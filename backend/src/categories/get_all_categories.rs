@@ -3,7 +3,7 @@ use sqlx::PgPool;
 
 use super::RootCategory;
 
-use crate::error::{Error as RequestError, Result as RequestResult};
+use crate::error::Result as RequestResult;
 
 /// Get all categories handler - GET /api/categories
 pub async fn get_all_categories(
@@ -16,8 +16,7 @@ pub async fn get_all_categories(
 		WHERE parent_id IS NULL
 		"#)
 		.fetch_all(&db)
-		.await
-		.map_err(|_| RequestError::server())?;	
+		.await?;
 
     Ok(Json(categories))
 }

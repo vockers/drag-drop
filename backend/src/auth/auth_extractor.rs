@@ -1,6 +1,6 @@
 use std::env;
 
-use axum::{async_trait, extract::FromRequestParts, http::{request::Parts, StatusCode}};
+use axum::{async_trait, extract::FromRequestParts, http::request::Parts};
 use axum_extra::{headers::{authorization::Bearer, Authorization}, TypedHeader};
 use jsonwebtoken::{decode, DecodingKey, Validation};
 
@@ -18,7 +18,7 @@ where
     async fn from_request_parts(parts: &mut Parts, _state: &S) -> RequestResult<Self> {
         let authorization = TypedHeader::<Authorization<Bearer>>::from_request_parts(parts, _state)
             .await
-            .map_err(|_| RequestError::new(StatusCode::BAD_REQUEST, "Missing authorization header!"))?;
+            .map_err(|_| RequestError::BadRequestWithError("Missing authorization header!".to_string()))?;
 
         let jwt = authorization.token();
 
@@ -26,10 +26,10 @@ where
             jwt,
             &DecodingKey::from_secret(env::var("JWT_SECRET").unwrap().as_ref()),
             &Validation::default())
-            .map_err(|_| RequestError::new(StatusCode::UNAUTHORIZED, "Invalid token!"))?;
+            .map_err(|_| RequestError::Unauthorized)?;
 
         let user_id = token.claims.sub.parse::<i32>()
-            .map_err(|_| RequestError::new(StatusCode::UNAUTHORIZED, "Invalid token!"))?;
+            .map_err(|_| RequestError::Unauthorized)?;
 
         Ok(Auth(user_id))
     }

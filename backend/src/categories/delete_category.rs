@@ -1,4 +1,4 @@
-use axum::{extract::Path, http::StatusCode, Extension};
+use axum::{extract::Path, Extension};
 use sqlx::{postgres::PgRow, PgPool};
 
 use crate::{auth::auth_extractor::Auth, error::{Error as RequestError, Result as RequestResult}};
@@ -18,11 +18,10 @@ pub async fn delete_category(
     .bind(category_id)
     .bind(user_id)
     .fetch_optional(&db)
-    .await
-    .map_err(|_| RequestError::server())?;
+    .await?;
 
     if let None = user_category {
-        return Err(RequestError::new(StatusCode::UNAUTHORIZED, "Unauthorized access to category"));
+        return Err(RequestError::Unauthorized);
     }
 
     sqlx::query!(
@@ -30,8 +29,7 @@ pub async fn delete_category(
         category_id
     )
     .execute(&db)
-    .await
-    .map_err(|_| RequestError::server())?;
+    .await?;
 
     sqlx::query(
         r#"WITH RECURSIVE category_tree AS (
@@ -49,8 +47,7 @@ pub async fn delete_category(
         "#)
         .bind(category_id)
         .execute(&db)
-        .await
-        .map_err(|error| {dbg!(error); RequestError::server()})?;
+        .await?;
 
     Ok(())
 }
