@@ -79,7 +79,7 @@ pub fn router() -> Router {
 pub fn generate_jwt(user_id: i32) -> String {
     let now = chrono::Utc::now();
     let iat = now.timestamp() as usize;
-    let exp = (now + chrono::Duration::minutes(600)).timestamp() as usize;
+    let exp = (now + chrono::Duration::days(30)).timestamp() as usize;
     let claims: TokenClaims = TokenClaims {
         sub: user_id.to_string(),
         exp,

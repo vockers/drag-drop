@@ -1,6 +1,6 @@
 import axios from "axios"
 import { useEffect, useState } from "react"
-import CategoryModal from "./CategoryModal"
+import CategoryListItem from "./CategoryListItem";
 
 export default function CategoryList() {
     const [categories, setCategories] = useState([])
@@ -19,12 +19,10 @@ export default function CategoryList() {
 
     return (
         <>
-            { categories.map((category: any, index) => (
-                <div key={index} className="w-full max-w-screen-md mb-5 rounded-md bg-white shadow-md p-6 flex justify-between items-center">
-                    <h2 className="text-slate-600 font-semibold text-lg">{category.name}</h2>
-                    <CategoryModal category={category} />
-                </div>)
-            ) }
+            {categories.map((category: any, index) => (
+                <CategoryListItem key={index} category={category} />
+            )
+            )}
         </>
     )
 }

@@ -5,7 +5,7 @@ use tower_http::cors::{Any, CorsLayer};
 
 pub fn routes(db: PgPool) -> Router {
     let cors = CorsLayer::new()
-        .allow_methods([Method::GET, Method::POST])
+        .allow_methods([Method::GET, Method::POST, Method::DELETE])
         .allow_headers(Any)
         .allow_origin(Any);
 

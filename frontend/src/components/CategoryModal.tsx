@@ -1,7 +1,6 @@
-import { AuthenticationContext } from "@/context/AuthContext";
 import { Box, Modal } from "@mui/material";
 import axios from "axios";
-import { useContext, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 
 const style = {
     position: 'absolute' as 'absolute',
@@ -17,19 +16,12 @@ const style = {
 
 export default function CategoryModal({ category }: { category: any }) {
     const [open, setOpen] = useState(false)
-    
-    const { user } = useContext(AuthenticationContext);
 
     const toggleModal = () => setOpen(!open);
 
     return (
         <>
-            <div className="flex gap-2">
-                { category.user_id === user?.id && (
-                    <button onClick={toggleModal} className="px-3 py-1 rounded bg-red-500 hover:bg-red-600 text-slate-50 font-medium">DELETE</button>
-                )}
-                <button onClick={toggleModal} className="px-3 py-1 border-2 rounded hover:bg-slate-200 border-blue-500 text-blue-600 font-medium">SHOW</button>
-            </div>
+            <button onClick={toggleModal} className="px-3 py-1 border-2 rounded hover:bg-slate-200 border-blue-500 text-blue-600 font-medium">SHOW</button>
             <Modal
                 open={open}
                 onClose={toggleModal}
@@ -48,7 +40,7 @@ export default function CategoryModal({ category }: { category: any }) {
     )
 }
 
-function TreeNode({node}: {node: any}) {
+function TreeNode({ node }: { node: any }) {
     const [showChildren, setShowChildren] = useState(true);
     const [children, setChildren] = useState([]);
 
@@ -70,7 +62,10 @@ function TreeNode({node}: {node: any}) {
 
     return (
         <div className="text-slate-600 w-full">
-            <button onClick={handleClick} className={"w-full px-3 py-2 flex gap-2 mb-1 rounded-md hover:bg-slate-300 " + (children.length > 0 && showChildren && "bg-slate-300")}>
+            <button 
+                onClick={handleClick} 
+                className={"w-full px-3 py-2 flex gap-2 mb-1 rounded-md hover:bg-slate-300 " + (children.length > 0 && showChildren && "bg-slate-300")}
+            >
                 {children.length > 0 ? (
                     showChildren ? (
                         <i className="w-4 fa fa-chevron-down self-center text-xs"></i>
@@ -83,7 +78,10 @@ function TreeNode({node}: {node: any}) {
                 <h1>{node.name}</h1>
             </button>
             {children.length > 0 &&
-                <div className="pl-3" style={{display: showChildren ? "block" : "none"}}>
+                <div
+                    className="pl-3"
+                    style={{ display: showChildren ? "block" : "none" }}
+                >
                     {children.map((child: any, index) => {
                         return (
                             <TreeNode node={child} key={index} />

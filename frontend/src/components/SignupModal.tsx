@@ -3,18 +3,6 @@ import { Alert, Box, CircularProgress, Modal } from "@mui/material";
 import axios from "axios";
 import { useContext, useEffect, useState } from "react";
 
-const style = {
-    position: 'absolute' as 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    width: 500,
-    bgcolor: 'background.paper',
-    boxShadow: 3,
-    p: 4,
-    borderRadius: "4px",
-};
-
 export default function SignupModal() {
     const [open, setOpen] = useState(false);
     const [inputs, setInputs] = useState({
@@ -66,7 +54,17 @@ export default function SignupModal() {
                 aria-labelledby="modal-modal-title"
                 aria-describedby="modal-modal-description"
             >
-                <Box sx={style}>
+                <Box sx={{
+                    position: 'absolute' as 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    width: 500,
+                    bgcolor: 'background.paper',
+                    boxShadow: 3,
+                    p: 4,
+                    borderRadius: "4px",
+                }}>
                     <div className="h-[500px]">
                         {loading ?
                             <div className="py-24 px-2 h-full flex justify-center items-center">

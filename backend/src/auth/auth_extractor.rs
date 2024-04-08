@@ -27,7 +27,7 @@ where
             jwt,
             &DecodingKey::from_secret(env::var("JWT_SECRET").unwrap().as_ref()),
             &Validation::default())
-            .map_err(|_| RequestError::Unauthorized)?;
+            .map_err(|error| {dbg!(error); RequestError::Unauthorized})?;
 
         let user_id = token.claims.sub.parse::<i32>()
             .map_err(|_| RequestError::Unauthorized)?;
