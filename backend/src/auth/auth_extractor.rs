@@ -6,6 +6,7 @@ use jsonwebtoken::{decode, DecodingKey, Validation};
 
 use crate::{error::{Error as RequestError, Result as RequestResult}, auth::TokenClaims};
 
+/// Auth extractor - Extracts the user id from the JWT
 pub struct Auth(pub i32);
 
 #[async_trait]
