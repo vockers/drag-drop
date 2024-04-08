@@ -24,12 +24,10 @@ pub async fn delete_category(
         return Err(RequestError::Unauthorized);
     }
 
-    sqlx::query!(
-        "DELETE FROM user_categories WHERE category_id = $1",
-        category_id
-    )
-    .execute(&db)
-    .await?;
+    sqlx::query("DELETE FROM user_categories WHERE category_id = $1")
+        .bind(category_id)
+        .execute(&db)
+        .await?;
 
     sqlx::query(
         r#"WITH RECURSIVE category_tree AS (

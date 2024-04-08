@@ -14,11 +14,14 @@ docker-compose up # add '-d' to run in background and 'docker-compose down' to s
 | `/api/categories`         | POST   | Create a new category                 |
 | `/api/categories`         | GET    | Get all 'root' categories             |
 | `/api/categories/:id`     | GET    | Get a specific category by ID         |
-| `/api/signup`             | POST   | Create a new user                     |
-| `/api/login`              | POST   | Returns a JWT as cookie               |
+| `/api/categories/:id`     | DELETE | Delete a specific category by ID      |
+| `/api/signup`             | POST   | Create a new user and returns a JWT   |
+| `/api/login`              | POST   | Returns a JWT                         |
 
 
 ## Frontend (React) - http://localhost/8080
 Test files to upload can be found in **./tests/data**
 
 ### Screenshots
+![preview01.jpg](screenshots/preview01.jpg)
+![preview02.jpg](screenshots/preview02.jpg)
