@@ -1,11 +1,12 @@
 pub mod create_category;
 pub mod get_all_categories;
 pub mod get_single_category;
+pub mod delete_category;
 
-use axum::{routing::{get, post}, Router};
+use axum::{routing::{delete, get, post}, Router};
 use serde::{Deserialize, Serialize};
 
-use self::{create_category::create_category, get_all_categories::get_all_categories, get_single_category::get_single_category};
+use self::{create_category::create_category, delete_category::delete_category, get_all_categories::get_all_categories, get_single_category::get_single_category};
 
 #[derive(sqlx::FromRow, Serialize)]
 pub struct Category {
@@ -39,4 +40,5 @@ pub fn routes() -> Router {
 		.route("/categories", post(create_category))
 		.route("/categories", get(get_all_categories))
 		.route("/categories/:category_id", get(get_single_category))
+		.route("/categories/:category_id", delete(delete_category))
 }

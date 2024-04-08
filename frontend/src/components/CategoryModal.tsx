@@ -1,5 +1,5 @@
 import { AuthenticationContext } from "@/context/AuthContext";
-import { Box, CircularProgress, Modal } from "@mui/material";
+import { Box, Modal } from "@mui/material";
 import axios from "axios";
 import { useContext, useEffect, useState } from "react"
 
